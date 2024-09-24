@@ -4,35 +4,54 @@ const router = express.Router();
 
 // Public Routes
 
-// GET request - Fetch all items
-router.get("/items", async (req, res) => {
+// GET request - user
+router.get("/create/:email", async (req, res) => {
   try {
     const db = await getDb();
     const usersCollection = db.collection("Users");
 
-    const items = await usersCollection.find().toArray();
+    const email = req.params.email;
+    console.log(email);
 
-    res.send(items)
+    const user = await usersCollection.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.send(user);
   } catch (error) {
-    console.error("Error fetching items:", error.message);
+    console.error("Error fetching user:", error.message);
     res
       .status(500)
-      .json({ message: "Error fetching items", error: error.message });
+      .json({ message: "Error fetching user", error: error.message });
   }
 });
 
 // POST request - Create a new item
-router.post("/items", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
+    const item = req.body;
+
+    // Validate incoming data
+    if (
+      !item.name ||
+      !item.email ||
+      !item.username ||
+      !item.phone ||
+      !item.password
+    ) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
     const db = await getDb();
     const usersCollection = db.collection("Users");
-    const item = req.body;
 
     console.log(item, "I am Item");
 
     const result = await usersCollection.insertOne(item);
 
-    res.send(result)
+    res.status(201).send(result);
   } catch (error) {
     console.error("Error creating item:", error.message);
     res
@@ -51,7 +70,7 @@ router.delete("/items/:id", async (req, res) => {
     const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
 
     if (result.deletedCount === 1) {
-      res.send(result)
+      res.send(result);
     } else {
       res.status(404).json({ message: `Item with ID: ${id} not found` });
     }
@@ -69,7 +88,7 @@ router.patch("/items/:id", async (req, res) => {
     const { id } = req.params;
     const updatedItem = req.body;
     const db = await getDb();
-    const usersCollection = db.collection("Users"); 
+    const usersCollection = db.collection("Users");
 
     const result = await usersCollection.updateOne(
       { _id: new ObjectId(id) },
@@ -77,7 +96,7 @@ router.patch("/items/:id", async (req, res) => {
     );
 
     if (result.matchedCount === 1) {
-      res.send(result)
+      res.send(result);
     } else {
       res.status(404).json({ message: `Item with ID: ${id} not found` });
     }

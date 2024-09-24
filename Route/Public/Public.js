@@ -5,7 +5,7 @@ const router = express.Router();
 // Public Routes
 
 // GET request - Fetch all items
-router.get("/items", async (req, res) => {
+router.get("/posts", async (req, res) => {
   try {
     const db = await getDb();
     const postsCollection = db.collection("Posts");
